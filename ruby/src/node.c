@@ -1,15 +1,17 @@
 #undef RUBY_EXPORT
 #include <ruby/ruby.h>
+#include "erl_listen.h"
 
 int main(int argc, char **argv) {
+  if (argv  == NULL) {
+    printf( "NULL !!!\n");
+  }
   ruby_sysinit(&argc, &argv); 
   {
     RUBY_INIT_STACK;
     ruby_init();
     ruby_init_loadpath();
-    // ruby_run_node(ruby_options(argc, argv));
 
-    // rb_funcall(rb_mKernel, rb_intern("require"), 1, rb_str_new2("rubygems"));
     rb_funcall(rb_mKernel, rb_intern("require"), 1, rb_str_new2("./sum.rb"));
 
     ID sym_mymodule = rb_intern("Summer");
@@ -20,3 +22,5 @@ int main(int argc, char **argv) {
     return ruby_cleanup(0);
   }
 }
+
+
