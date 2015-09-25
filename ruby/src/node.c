@@ -5,11 +5,29 @@
 
 #include "erl_listen.h"
 
+// TODO in config file
+#define PORT 3456
+#define COOKIE_NAME "secretcookie"
+#define ROOT_RB "./sum.rb"
+#define BUFSIZE 1000
+
 int main(int argc, char **argv) {
+  int port = PORT;
+  int listen;
+
   erl_init(NULL, 0);
 
-  if(erl_connect_init(1, "secretcookie", 0) == -1) {
+  if(erl_connect_init(1, COOKIE_NAME, 0) == -1) {
     erl_err_quit("erl_connect_init");
+  }
+
+  /* Make a listen socket */
+  if((listen = erl_listen(port)) <= 0) {
+    erl_err_quit("invalid port for node.rb");
+  }
+
+  if(erl_publish(port) == -1) {
+    erl_err_quit("epmd not started!");
   }
 
   ruby_sysinit(&argc, &argv); 
@@ -18,7 +36,7 @@ int main(int argc, char **argv) {
     ruby_init();
     ruby_init_loadpath();
 
-    rb_funcall(rb_mKernel, rb_intern("require"), 1, rb_str_new2("./sum.rb"));
+    rb_funcall(rb_mKernel, rb_intern("require"), 1, rb_str_new2(ROOT_RB));
 
     ID sym_mymodule = rb_intern("Summer");
     VALUE mymodule = rb_const_get(rb_cObject, sym_mymodule);
