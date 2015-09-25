@@ -10,3 +10,11 @@ cd  build
 cmake ..
 make
 ```
+
+## Run
+
+First, start `epmd` : 
+
+```
+epmd -daemon
+```
