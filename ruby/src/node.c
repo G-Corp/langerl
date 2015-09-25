@@ -1,11 +1,17 @@
 #undef RUBY_EXPORT
 #include <ruby/ruby.h>
+#include <erl_interface.h>
+#include <ei.h>
+
 #include "erl_listen.h"
 
 int main(int argc, char **argv) {
-  if (argv  == NULL) {
-    printf( "NULL !!!\n");
+  erl_init(NULL, 0);
+
+  if(erl_connect_init(1, "secretcookie", 0) == -1) {
+    erl_err_quit("erl_connect_init");
   }
+
   ruby_sysinit(&argc, &argv); 
   {
     RUBY_INIT_STACK;
