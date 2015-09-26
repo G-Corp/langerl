@@ -10,7 +10,7 @@ include_directories(${RUBY_INCLUDE_DIRS})
 
 file(GLOB SOURCES src/*)
 
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_HOME_DIRECTORY}/bin)
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_HOME_DIRECTORY}/priv)
 add_executable(node.rb 
   ${SOURCES}
   ${LANGERL_COMMON_SOURCES}

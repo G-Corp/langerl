@@ -18,6 +18,8 @@ link_directories(
   ${ERLANG_EI_LIBRARY_PATH}
   )
 set(LANGERL_COMMON_LIBRARIES erl_interface ei nsl ${CMAKE_THREAD_LIBS_INIT})
-file(GLOB LANGERL_COMMON_SOURCES ${CMAKE_HOME_DIRECTORY}/src/*)
+file(GLOB LANGERL_COMMON_SOURCES ${CMAKE_HOME_DIRECTORY}/c_src/*)
 
 add_subdirectory (ruby)
+add_subdirectory (src)
+

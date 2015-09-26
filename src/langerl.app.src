@@ -1,0 +1,12 @@
+{application, ${langerl_app_name},
+ [
+  {description, ""},
+  {vsn, ${langerl_app_version}},
+  {registered, []},
+  {modules, [${langerl_app_modules}]},
+  {applications, [
+                  kernel
+                  , stdlib
+                 ]},
+  {env, []}
+ ]}.
