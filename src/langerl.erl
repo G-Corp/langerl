@@ -87,6 +87,9 @@ handle_cast(_Msg, State) ->
 handle_info({test, Result}, #state{from=From} = State) when From =/= undefined ->
 	gen_server:reply(From, {ok, Result}),
 	{noreply, State#state{from=undefined}};
+handle_info({load, Result}, #state{from=From} = State) when From =/= undefined ->
+	gen_server:reply(From, {ok, Result}),
+	{noreply, State#state{from=undefined}};
 handle_info({error, _} = Result, #state{from=From} = State) when From =/= undefined ->
 	gen_server:reply(From, Result),
 	{noreply, State#state{from=undefined}};

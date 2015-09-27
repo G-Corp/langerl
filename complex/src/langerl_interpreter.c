@@ -20,3 +20,7 @@ int test_interpreter(int value) {
   LANGERL_LOG("test interpreter for complex!");
   return value * value;
 }
+
+int load_file_interpreter(char *file) {
+  return LOAD_OK;
+}

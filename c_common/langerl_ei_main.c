@@ -190,31 +190,60 @@ static int handle_msg(erlang_pid *pid) {
 	if(strcmp(interpreter_atom, "test") == 0) {
     if(arity != 3) {
       error_msg(x_out, "missing_parameter");
-      return 1;
     } else {
       ei_get_type(x_in->buff, &x_in->index, &type, &len);
       if(ERL_SMALL_INTEGER_EXT == type || ERL_INTEGER_EXT == type) {
         long  value;
         if(ei_decode_long(x_in->buff, &x_in->index, &value) < 0) {
           error_msg(x_out, "invalid_parameter");
-          return 1;
         } else {
           x_out->index = 0;
           ei_x_encode_version(x_out);
           ei_x_encode_tuple_header(x_out, 2);
           ei_x_encode_atom(x_out, "test");
           ei_x_encode_long(x_out, test_interpreter(value));
-          return 1;
         }
       } else {
         error_msg(x_out, "invalid_parameter");
-        return 1;
       }
     }
   } else if(strcmp(interpreter_atom, "call") == 0) {
     // TODO
   } else if(strcmp(interpreter_atom, "load") == 0) {
-    // TODO
+    if(arity != 3) {
+      error_msg(x_out, "missing_parameter");
+    } else {
+      ei_get_type(x_in->buff, &x_in->index, &type, &len);
+      if(ERL_BINARY_EXT == type) {
+        char *file = (char*)malloc(sizeof(char)*(len+1));
+        memset(file, 0, len + 1);
+        if(ei_decode_binary(x_in->buff, &x_in->index, file, NULL) < 0) {
+          error_msg(x_out, "invalid_parameter");
+        } else {
+          switch (load_file_interpreter(file)) {
+            case LOAD_OK:
+              x_out->index = 0;
+              ei_x_encode_version(x_out);
+              ei_x_encode_tuple_header(x_out, 2);
+              ei_x_encode_atom(x_out, "load");
+              ei_x_encode_binary(x_out, file, strlen(file));
+              break;
+            case LOAD_ALREADY:
+              error_msg(x_out, "alreary_loaded");
+              break;
+            case LOAD_MISSING_FILE:
+              error_msg(x_out, "missing_file");
+              break;
+            case LOAD_ERROR:
+            default:
+              error_msg(x_out, "load_error");
+          }
+        }
+        free(file);
+      } else {
+        error_msg(x_out, "invalid_parameter");
+      }
+    }
   } else if(strcmp(interpreter_atom, "exec") == 0) {
     // TODO
   } else if(strcmp(interpreter_atom, "stop") == 0) {
