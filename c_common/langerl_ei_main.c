@@ -2,13 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-// #include <erl_interface.h>
 #include <ei.h>
 #include "langerl_error.h"
 #include "langerl_interpreter.h"
-#ifdef LANGERL_DEBUG
 #include "langerl_logger.h"
-#endif
 
 static void main_message_loop();
 static void reconnect();
