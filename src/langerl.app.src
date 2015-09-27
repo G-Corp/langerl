@@ -8,5 +8,6 @@
                   kernel
                   , stdlib
                  ]},
+  {mod, {${langerl_app_name}_app, []}},
   {env, []}
  ]}.

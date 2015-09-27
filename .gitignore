@@ -6,3 +6,6 @@ cmake_install.cmake
 build
 priv
 ebin
+erl_crash.dump
+log.txt
+

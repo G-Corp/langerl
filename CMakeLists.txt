@@ -10,7 +10,7 @@ FIND_PACKAGE(Erlang REQUIRED)
 FIND_PACKAGE(Threads REQUIRED)
 
 include_directories(
-  ${CMAKE_HOME_DIRECTORY}/include
+  ${CMAKE_HOME_DIRECTORY}/c_common
   ${ERLANG_EI_INCLUDE_PATH}
   ${ERLANG_ERTS_INCLUDE_PATH}
   )
@@ -18,8 +18,13 @@ link_directories(
   ${ERLANG_EI_LIBRARY_PATH}
   )
 set(LANGERL_COMMON_LIBRARIES erl_interface ei nsl ${CMAKE_THREAD_LIBS_INIT})
-file(GLOB LANGERL_COMMON_SOURCES ${CMAKE_HOME_DIRECTORY}/c_src/*)
+file(GLOB LANGERL_COMMON_SOURCES ${CMAKE_HOME_DIRECTORY}/c_common/*.c)
 
-add_subdirectory (ruby)
-add_subdirectory (src)
+if($ENV{DEBUG}) 
+  add_definitions(-DLANGERL_DEBUG)
+endif($ENV{DEBUG}) 
+
+# add_subdirectory(ruby)
+add_subdirectory(src)
+add_subdirectory(complex)
 
