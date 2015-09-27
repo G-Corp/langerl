@@ -24,7 +24,7 @@ if($ENV{DEBUG})
   add_definitions(-DLANGERL_DEBUG)
 endif($ENV{DEBUG}) 
 
-# add_subdirectory(ruby)
+add_subdirectory(ruby)
 add_subdirectory(src)
 add_subdirectory(complex)
 

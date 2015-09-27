@@ -8,15 +8,15 @@ find_library(DL_LIB dl)
 
 include_directories(${RUBY_INCLUDE_DIRS})
 
-file(GLOB SOURCES src/*)
+file(GLOB SOURCES src/*.c)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_HOME_DIRECTORY}/priv)
-add_executable(node.rb 
+add_executable(node.ruby 
   ${SOURCES}
   ${LANGERL_COMMON_SOURCES}
   )
-target_link_libraries(node.rb ${RUBY_LIBRARY})
-target_link_libraries(node.rb ${M_LIB})
-target_link_libraries(node.rb ${CRYPT_LIB})
-target_link_libraries(node.rb ${DL_LIB})
-target_link_libraries(node.rb ${LANGERL_COMMON_LIBRARIES})
+target_link_libraries(node.ruby ${RUBY_LIBRARY})
+target_link_libraries(node.ruby ${M_LIB})
+target_link_libraries(node.ruby ${CRYPT_LIB})
+target_link_libraries(node.ruby ${DL_LIB})
+target_link_libraries(node.ruby ${LANGERL_COMMON_LIBRARIES})
