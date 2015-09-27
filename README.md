@@ -11,10 +11,8 @@ cmake ..
 make
 ```
 
-## Run
-
-First, start `epmd` : 
+## Dev
 
 ```
-epmd -daemon
+make dev
 ```
