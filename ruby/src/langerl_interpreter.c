@@ -17,14 +17,6 @@ int start_interpreter(void **interpreter) {
   ruby_init();
   ruby_init_loadpath();
 
-//  rb_funcall(rb_mKernel, rb_intern("require"), 1, rb_str_new2(ROOT_RB));
-//
-//  ID sym_mymodule = rb_intern("Summer");
-//  VALUE mymodule = rb_const_get(rb_cObject, sym_mymodule);
-//  VALUE result = rb_funcall(mymodule, rb_intern("sum"), 1, INT2FIX(10));
-//
-//  LANGERL_LOG("Result = %d\n", NUM2INT(result));
-
   return 1;
 }
 
@@ -66,6 +58,7 @@ void * exec_interpreter(char *code, int *rcod) {
 }
 
 void * call_interpreter(char *module, char *fun, int arity, void **params) {
+  LANGERL_LOG("CALL %s.%s(%d)", module, fun, arity);
   VALUE val_module = NULL;
   if(NULL != module) {
     val_module = rb_const_get(rb_cObject, rb_intern(module));
@@ -74,9 +67,12 @@ void * call_interpreter(char *module, char *fun, int arity, void **params) {
 }
 
 void * to_interpreter(ei_x_buff * x_buff) {
+  long i;
+  char *s;
 	ei_term term;
-  VALUE result;
-	if (ei_decode_ei_term(x_buff->buff, &x_buff->index, &term) < 0) {
+  VALUE result, tmp;
+
+	if(ei_decode_ei_term(x_buff->buff, &x_buff->index, &term) < 0) {
     return NULL;
   }
   switch (term.ei_type) {
@@ -84,34 +80,57 @@ void * to_interpreter(ei_x_buff * x_buff) {
     case ERL_SMALL_ATOM_EXT:
     case ERL_ATOM_UTF8_EXT:
     case ERL_SMALL_ATOM_UTF8_EXT:
-      // TODO
+      LANGERL_LOG("===> ERL_*_ATOM_*");
+      tmp = rb_str_new_cstr(term.value.atom_name);
+      result = rb_funcall(tmp, rb_intern("to_sym"), 0);
       break;
     case ERL_SMALL_INTEGER_EXT:
     case ERL_INTEGER_EXT:
+      LANGERL_LOG("===> ERL_*_INTEGER_*");
       result = LL2NUM(term.value.i_val);
       break;
     case ERL_FLOAT_EXT:
     case NEW_FLOAT_EXT:
-      // TODO
+      LANGERL_LOG("===> ERL_*_FLOAT_*");
+      result = DBL2NUM(term.value.d_val);
       break;
     case ERL_STRING_EXT:
+      LANGERL_LOG("===> ERL_*_STRING_* : %d", term.size);
+			s = (char *)malloc(sizeof(char)*(term.size + 1));
+			ei_decode_string(x_buff->buff, &x_buff->index, s);
+      result = rb_ary_new2(term.size);
+			for(i = 0; i < term.size; i++) {
+        LANGERL_LOG("  ===> #%d : %d", i, s[i]);
+        rb_ary_push(result, LL2NUM(s[i])); 
+			}
+			free(s);
+      break;
     case ERL_BINARY_EXT:
-      // TODO
+      LANGERL_LOG("===> ERL_*_BINARY_*");
+			s = (char *)malloc(sizeof(char)*term.size);
+			ei_decode_binary(x_buff->buff, &x_buff->index, s, &i);
+      result = rb_str_new(s, i);
+			free(s);
       break;
     case ERL_SMALL_TUPLE_EXT:
     case ERL_LARGE_TUPLE_EXT:
+      LANGERL_LOG("===> ERL_*_TUPLE_*");
       // TODO
       break;
     case ERL_LIST_EXT:
+      LANGERL_LOG("===> ERL_*_LIST_*");
       // TODO
       break;
     case ERL_NIL_EXT:
-      // TODO
+      LANGERL_LOG("===> ERL_*_NIL_*");
+      result = rb_ary_new();
       break;
     case ERL_MAP_EXT:
+      LANGERL_LOG("===> ERL_*_MAP_*");
       // TODO
       break;
     default:
+      LANGERL_LOG("===> ERL_*_???_*");
       break;
   }
   return (void*)result;
@@ -128,31 +147,38 @@ void ** to_interpreter_array(ei_x_buff *x_buff) {
   }
   switch(term.ei_type) {
     case ERL_STRING_EXT: 
-      s = (char *) calloc(term.size + 1, sizeof(char));
-      result = (void **)malloc(sizeof(void*)*term.size);
+      LANGERL_LOG("CALL PARAMS is ERL_STRING_EXT : %d", term.size);
+			s = (char *)malloc(sizeof(char)*(term.size + 1));
+      result = (void **)malloc(sizeof(void *)*term.size);
       ei_decode_string(x_buff->buff, &x_buff->index, s);
       for(i = 0; i < term.size; i++) {
-        result[i] = (void *)LL2NUM(s[i]);
+        LANGERL_LOG("  ===> #%d = %d", i, s[i]);
+        result[i] = (void *)LL2NUM((long)s[i]);
       }
       free(s);
       break;
     case ERL_LIST_EXT:
-      result = (void **)malloc(sizeof(void*)*term.arity);
-      for(i = 1; i <= term.arity; i++) {
+      LANGERL_LOG("CALL PARAMS is ERL_LIST_EXT : %d", term.arity);
+      result = (void **)malloc(sizeof(void *)*(term.arity));
+      for(i = 0; i < term.arity; i++) {
+        LANGERL_LOG("  => #%d", i);
         result[i] = to_interpreter(x_buff);
       }
       break;
     case ERL_NIL_EXT:
     default:
+      LANGERL_LOG("CALL PARAMS is ERL_NIL_EXT");
       result = (void**)malloc(0);
   }
+  LANGERL_LOG("CALL PARAMS is DONE");
   return result;
 }
 
 void to_erlang(ei_x_buff *x_out, void *data) {
+  long i, j;
   char *str = NULL;
+
   VALUE rdata = (VALUE)data;
-  LANGERL_LOG("VALUE!!!");
   switch (TYPE(rdata)) {
     case T_NIL:
       LANGERL_LOG("===> T_NIL");
@@ -168,19 +194,18 @@ void to_erlang(ei_x_buff *x_out, void *data) {
       ei_x_encode_binary(x_out, str, strlen(str));
       break;
     case T_ARRAY:
-      LANGERL_LOG("===> T_ARRAY");
-      // TODO
-      ei_x_encode_atom(x_out, "undefined_t_array");
+      i = RARRAY_LEN(rdata);
+      LANGERL_LOG("===> T_ARRAY : %d", i);
+      ei_x_encode_list_header(x_out, (int)i);
+      for(j = 0; j < i; j++) {
+        to_erlang(x_out, (void *)rb_ary_entry(rdata, j));
+      }
+      ei_x_encode_empty_list(x_out);
       break;
     case T_HASH:
       LANGERL_LOG("===> T_HASH");
       // TODO
       ei_x_encode_atom(x_out, "undefined_t_hash");
-      break;
-    case T_STRUCT:
-      LANGERL_LOG("===> T_STRUCT");
-      // TODO
-      ei_x_encode_atom(x_out, "undefined_t_struct");
       break;
     case T_BIGNUM:
       LANGERL_LOG("===> T_BIGNUM");
