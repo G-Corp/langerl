@@ -11,7 +11,8 @@
           node,
           port,
           mbox,
-          from
+          from,
+          interpreter
          }).
 
 start_link(Interpreter) ->
@@ -55,7 +56,7 @@ init([Node, Interpreter]) ->
       {stop, Reason};
     {ok, InterpreterCmd} ->
 			Port = open_port({spawn, InterpreterCmd}, [stream, {line, 100}, stderr_to_stdout, exit_status]),
-			wait_for_startup(#state{node = Node, port = Port, mbox = {interpreter, NodeName}})
+			wait_for_startup(#state{interpreter = Interpreter, node = Node, port = Port, mbox = {interpreter, NodeName}})
   end.
 
 handle_call(stop, _From, #state{mbox = Mbox, from = undefined} = State) ->
@@ -84,15 +85,18 @@ handle_call(_Request, _From, State) ->
 handle_cast(_Msg, State) ->
   {noreply, State}.
 
-handle_info({test, Result}, #state{from=From} = State) when From =/= undefined ->
-	gen_server:reply(From, {ok, Result}),
+handle_info({test, Result}, #state{interpreter = Int, from = From} = State) when From =/= undefined ->
+	gen_server:reply(From, {Int, {ok, Result}}),
 	{noreply, State#state{from=undefined}};
-handle_info({load, Result}, #state{from=From} = State) when From =/= undefined ->
-	gen_server:reply(From, {ok, Result}),
+handle_info({load, Result}, #state{interpreter = Int, from = From} = State) when From =/= undefined ->
+	gen_server:reply(From, {Int, {ok, Result}}),
 	{noreply, State#state{from=undefined}};
-handle_info({error, _} = Result, #state{from=From} = State) when From =/= undefined ->
-	gen_server:reply(From, Result),
+handle_info({exec, Result}, #state{interpreter = Int, from = From} = State) when From =/= undefined ->
+	gen_server:reply(From, {Int, Result}),
 	{noreply, State#state{from=undefined}};
+handle_info({error, _} = Result, #state{interpreter = Int, from = From} = State) when From =/= undefined ->
+	gen_server:reply(From, {Int, Result}),
+	{noreply, State#state{from = undefined}};
 handle_info(_Info, State) ->
   {noreply, State}.
 

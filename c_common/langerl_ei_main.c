@@ -96,11 +96,11 @@ static void main_message_loop() {
       case ERL_MSG:
         switch(message.msgtype) {
           case ERL_LINK:
-            LANGERL_LOG("DEBUG: Lua Erlang Node linked.");
+            LANGERL_LOG("DEBUG: Erlang Node linked.");
             break;
           case ERL_UNLINK:
           case ERL_EXIT:
-            LANGERL_LOG("DEBUG: Lua Erlang Node unlinked; terminating.");
+            LANGERL_LOG("DEBUG: Erlang Node unlinked; terminating.");
             running = 0;
             break;
           case ERL_SEND:
@@ -117,12 +117,12 @@ static void main_message_loop() {
                     "erlang", "is_alive",
                     x_rpc_in->buff, x_rpc_in->index,
                     x_rpc_out) < 0) {
-                LANGERL_LOG("DEBUG: Lua Erlang Node error in 'is alive?' rpc to '%s'.", pid.node);
+                LANGERL_LOG("DEBUG: Erlang Node error in 'is alive?' rpc to '%s'.", pid.node);
                 reconnect();
               }
               if(x_out->index > 0 && ei_send(EI_INTERPRETER_STATE.fd, &pid,
                     x_out->buff, x_out->index) < 0) {
-                LANGERL_LOG("FATAL: Lua Erlang Node error in send to '%s'.", pid.node);
+                LANGERL_LOG("FATAL: Erlang Node error in send to '%s'.", pid.node);
                 exit(8);
               }
             }
@@ -131,7 +131,7 @@ static void main_message_loop() {
         break;
       case ERL_ERROR:
       default:
-        LANGERL_LOG("DEBUG: Lua Erlang Node error in receive");
+        LANGERL_LOG("DEBUG: Erlang Node error in receive");
         reconnect();
         break;
     }
@@ -139,12 +139,12 @@ static void main_message_loop() {
 }
 
 static void reconnect() {
-  LANGERL_LOG("Lua Erlang Node '%s' reconnecting.", ei_thisnodename(&EI_INTERPRETER_STATE.ec));
+  LANGERL_LOG("Erlang Node '%s' reconnecting.", ei_thisnodename(&EI_INTERPRETER_STATE.ec));
   if((EI_INTERPRETER_STATE.fd = ei_connect(&EI_INTERPRETER_STATE.ec, EI_INTERPRETER_STATE.erlang_node)) < 0) {
     LANGERL_LOG("FATAL: Cannot reconnect to parent node '%s'", EI_INTERPRETER_STATE.erlang_node);
     exit(7);
   }
-  LANGERL_LOG("INFO: Lua Erlang Node reconnected.");
+  LANGERL_LOG("INFO: Erlang Node reconnected.");
 }
 
 static int handle_msg(erlang_pid *pid) {
@@ -217,7 +217,7 @@ static int handle_msg(erlang_pid *pid) {
         if(ei_decode_binary(x_in->buff, &x_in->index, file, NULL) < 0) {
           error_msg(x_out, "invalid_parameter");
         } else {
-          switch (load_file_interpreter(file)) {
+          switch(load_file_interpreter(file)) {
             case LOAD_OK:
               x_out->index = 0;
               ei_x_encode_version(x_out);
@@ -242,7 +242,38 @@ static int handle_msg(erlang_pid *pid) {
       }
     }
   } else if(strcmp(interpreter_atom, "exec") == 0) {
-    // TODO
+    if(arity != 3) {
+      error_msg(x_out, "missing_parameter");
+    } else {
+      ei_get_type(x_in->buff, &x_in->index, &type, &len);
+      if(ERL_BINARY_EXT == type) {
+        char *code = (char*)malloc(sizeof(char)*(len+1));
+        memset(code, 0, len + 1);
+        if(ei_decode_binary(x_in->buff, &x_in->index, code, NULL) < 0) {
+          error_msg(x_out, "invalid_parameter");
+        } else {
+          int rcod;
+          void *result = exec_interpreter(code, &rcod);
+          switch(rcod) {
+            case EXEC_OK:
+              x_out->index = 0;
+              ei_x_encode_version(x_out);
+              ei_x_encode_tuple_header(x_out, 2);
+              ei_x_encode_atom(x_out, "exec");
+              ei_x_encode_tuple_header(x_out, 2);
+              ei_x_encode_atom(x_out, "ok");
+              to_erlang(x_out, result);
+              break;
+            case EXEC_ERROR:
+            default:
+              error_msg(x_out, "exec_error");
+          }
+        }
+        free(code);
+      } else {
+        error_msg(x_out, "invalid_parameter");
+      }
+    }
   } else if(strcmp(interpreter_atom, "stop") == 0) {
     LANGERL_LOG("DEBUG: Interpreter Erlang Node stopping normally.");
     x_out->index = 0;

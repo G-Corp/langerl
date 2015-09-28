@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include <ei.h>
 #include "langerl_interpreter.h"
 
 int start_interpreter(void **interpreter) {
@@ -23,4 +24,14 @@ int test_interpreter(int value) {
 
 int load_file_interpreter(char *file) {
   return LOAD_OK;
+}
+
+void * exec_interpreter(char *code, int *result) {
+  *result = EXEC_OK;
+  return NULL;
+}
+
+void to_erlang(ei_x_buff *x_out, void *data) {
+  ei_x_encode_atom(x_out, "nil");
+  return;
 }
