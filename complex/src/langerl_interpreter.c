@@ -43,3 +43,7 @@ void to_erlang(ei_x_buff *x_out, void *data) {
 void * to_interpreter(ei_x_buff * buff) {
   return NULL;
 }
+
+void ** to_interpreter_array(ei_x_buff * buff) {
+  return (void**)malloc(0);
+}

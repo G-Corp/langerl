@@ -75,6 +75,7 @@ void * call_interpreter(char *module, char *fun, int arity, void **params) {
 
 void * to_interpreter(ei_x_buff * x_buff) {
 	ei_term term;
+  VALUE result;
 	if (ei_decode_ei_term(x_buff->buff, &x_buff->index, &term) < 0) {
     return NULL;
   }
@@ -87,7 +88,7 @@ void * to_interpreter(ei_x_buff * x_buff) {
       break;
     case ERL_SMALL_INTEGER_EXT:
     case ERL_INTEGER_EXT:
-      // TODO
+      result = LL2NUM(term.value.i_val);
       break;
     case ERL_FLOAT_EXT:
     case NEW_FLOAT_EXT:
@@ -107,20 +108,46 @@ void * to_interpreter(ei_x_buff * x_buff) {
     case ERL_NIL_EXT:
       // TODO
       break;
-    case ERL_SMALL_TUPLE_EXT:
-    case ERL_LARGE_TUPLE_EXT:
-      // TODO
-      break;
     case ERL_MAP_EXT:
       // TODO
       break;
     default:
       break;
   }
+  return (void*)result;
 }
 
- 
+void ** to_interpreter_array(ei_x_buff *x_buff) {
+  void **result = NULL;
+	ei_term term;
+  int i;
+  char *s;
 
+  if (ei_decode_ei_term(x_buff->buff, &x_buff->index, &term) < 0) {
+    return NULL;
+  }
+  switch(term.ei_type) {
+    case ERL_STRING_EXT: 
+      s = (char *) calloc(term.size + 1, sizeof(char));
+      result = (void **)malloc(sizeof(void*)*term.size);
+      ei_decode_string(x_buff->buff, &x_buff->index, s);
+      for(i = 0; i < term.size; i++) {
+        result[i] = (void *)LL2NUM(s[i]);
+      }
+      free(s);
+      break;
+    case ERL_LIST_EXT:
+      result = (void **)malloc(sizeof(void*)*term.arity);
+      for(i = 1; i <= term.arity; i++) {
+        result[i] = to_interpreter(x_buff);
+      }
+      break;
+    case ERL_NIL_EXT:
+    default:
+      result = (void**)malloc(0);
+  }
+  return result;
+}
 
 void to_erlang(ei_x_buff *x_out, void *data) {
   char *str = NULL;

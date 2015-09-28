@@ -216,16 +216,16 @@ static int handle_msg(erlang_pid *pid) {
         memset(module, 0, len + 1);
         if(ei_decode_binary(x_in->buff, &x_in->index, module, NULL) < 0) {
           error_msg(x_out, "invalid_parameter_1");
-          return 1;
+          goto TERMINATE_CALL;
         } 
       } else {
         LANGERL_LOG("==> GO %d expected %d", type, ERL_BINARY_EXT);
         error_msg(x_out, "invalid_parameter_2");
-        return 1;
+        goto TERMINATE_CALL;
       }
     } else if(arity != 4) {
       error_msg(x_out, "wrong_parameters");
-      return 1;
+      goto TERMINATE_CALL;
     }
     ei_get_type(x_in->buff, &x_in->index, &type, &len);
     if(ERL_BINARY_EXT == type) {
@@ -233,27 +233,24 @@ static int handle_msg(erlang_pid *pid) {
       memset(function, 0, len + 1);
       if(ei_decode_binary(x_in->buff, &x_in->index, function, NULL) < 0) {
         error_msg(x_out, "invalid_parameter_3");
-        return 1;
+        goto TERMINATE_CALL;
       } 
     } else {
       error_msg(x_out, "invalid_parameter_4");
-      return 1;
+      goto TERMINATE_CALL;
     }
     ei_get_type(x_in->buff, &x_in->index, &type, &function_arity);
-    if(ERL_LIST_EXT == type) {
+    if(ERL_LIST_EXT == type || ERL_STRING_EXT == type || ERL_NIL_EXT == type) {
       LANGERL_LOG("====> call /%d", function_arity);
-      int i;
-      function_parameters = (void**)malloc(sizeof(void*)*function_arity);
-      for(i = 1; i <= function_arity; i++) { 
-        function_parameters[i] = to_interpreter(x_in);
+      function_parameters = to_interpreter_array(x_in);
+      if(NULL == function_parameters) {
+        error_msg(x_out, "invalid_parameter_5");
+        goto TERMINATE_CALL;
       }
-    } else if(ERL_NIL_EXT == type) {
-      function_arity = 0;
-      function_parameters = (void**)malloc(sizeof(void*)*0);
     } else {
       LANGERL_LOG("==> GO %d expected %d", type, ERL_LIST_EXT);
-      error_msg(x_out, "invalid_parameter_5");
-      return 1;
+      error_msg(x_out, "invalid_parameter_6");
+      goto TERMINATE_CALL;
     }
     void *result = call_interpreter(module, function, function_arity, function_parameters);
     x_out->index = 0;
@@ -264,9 +261,10 @@ static int handle_msg(erlang_pid *pid) {
     ei_x_encode_atom(x_out, "ok");
     to_erlang(x_out, result);
 
+TERMINATE_CALL:
     if(NULL != module) { free(module); }
-    free(function);
-    free(function_parameters);
+    if(NULL != function) { free(function); }
+    if(NULL != function_parameters) { free(function_parameters); }
   } else if(strcmp(interpreter_atom, "load") == 0) {
     if(arity != 3) {
       error_msg(x_out, "missing_parameter");

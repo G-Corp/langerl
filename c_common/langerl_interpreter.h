@@ -19,5 +19,6 @@ void * call_interpreter(char *, char *, int, void **);
 
 void to_erlang(ei_x_buff *, void *);
 void * to_interpreter(ei_x_buff *);
+void ** to_interpreter_array(ei_x_buff *);
 
 #endif
