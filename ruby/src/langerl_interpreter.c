@@ -118,8 +118,12 @@ void * to_interpreter(ei_x_buff * x_buff) {
       // TODO
       break;
     case ERL_LIST_EXT:
-      LANGERL_LOG("===> ERL_*_LIST_*");
-      // TODO
+      LANGERL_LOG("===> ERL_*_LIST_* : %d", term.arity);
+      result = rb_ary_new2(term.arity);
+      for(i = 0; i < term.arity; i++) {
+        LANGERL_LOG("  => #%d", i);
+        rb_ary_push(result, (VALUE)to_interpreter(x_buff));
+      }
       break;
     case ERL_NIL_EXT:
       LANGERL_LOG("===> ERL_*_NIL_*");
