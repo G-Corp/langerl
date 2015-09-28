@@ -69,10 +69,10 @@ void * call_interpreter(char *module, char *fun, int arity, void **params) {
 void * to_interpreter(ei_x_buff * x_buff) {
   long i;
   char *s;
-	ei_term term;
+  ei_term term;
   VALUE result, tmp;
 
-	if(ei_decode_ei_term(x_buff->buff, &x_buff->index, &term) < 0) {
+  if(ei_decode_ei_term(x_buff->buff, &x_buff->index, &term) < 0) {
     return NULL;
   }
   switch (term.ei_type) {
@@ -96,21 +96,21 @@ void * to_interpreter(ei_x_buff * x_buff) {
       break;
     case ERL_STRING_EXT:
       LANGERL_LOG("===> ERL_*_STRING_* : %d", term.size);
-			s = (char *)malloc(sizeof(char)*(term.size + 1));
-			ei_decode_string(x_buff->buff, &x_buff->index, s);
+      s = (char *)malloc(sizeof(char)*(term.size + 1));
+      ei_decode_string(x_buff->buff, &x_buff->index, s);
       result = rb_ary_new2(term.size);
-			for(i = 0; i < term.size; i++) {
+      for(i = 0; i < term.size; i++) {
         LANGERL_LOG("  ===> #%d : %d", i, s[i]);
         rb_ary_push(result, LL2NUM(s[i])); 
-			}
-			free(s);
+      }
+      free(s);
       break;
     case ERL_BINARY_EXT:
       LANGERL_LOG("===> ERL_*_BINARY_*");
-			s = (char *)malloc(sizeof(char)*term.size);
-			ei_decode_binary(x_buff->buff, &x_buff->index, s, &i);
+      s = (char *)malloc(sizeof(char)*term.size);
+      ei_decode_binary(x_buff->buff, &x_buff->index, s, &i);
       result = rb_str_new(s, i);
-			free(s);
+      free(s);
       break;
     case ERL_SMALL_TUPLE_EXT:
     case ERL_LARGE_TUPLE_EXT:
@@ -138,7 +138,7 @@ void * to_interpreter(ei_x_buff * x_buff) {
 
 void ** to_interpreter_array(ei_x_buff *x_buff) {
   void **result = NULL;
-	ei_term term;
+  ei_term term;
   int i;
   char *s;
 
@@ -148,7 +148,7 @@ void ** to_interpreter_array(ei_x_buff *x_buff) {
   switch(term.ei_type) {
     case ERL_STRING_EXT: 
       LANGERL_LOG("CALL PARAMS is ERL_STRING_EXT : %d", term.size);
-			s = (char *)malloc(sizeof(char)*(term.size + 1));
+      s = (char *)malloc(sizeof(char)*(term.size + 1));
       result = (void **)malloc(sizeof(void *)*term.size);
       ei_decode_string(x_buff->buff, &x_buff->index, s);
       for(i = 0; i < term.size; i++) {
