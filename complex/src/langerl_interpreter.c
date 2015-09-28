@@ -31,7 +31,15 @@ void * exec_interpreter(char *code, int *result) {
   return NULL;
 }
 
+void * call_interpreter(char *module, char *fun, int arity, void **params) {
+  return NULL;
+}
+
 void to_erlang(ei_x_buff *x_out, void *data) {
   ei_x_encode_atom(x_out, "nil");
   return;
+}
+
+void * to_interpreter(ei_x_buff * buff) {
+  return NULL;
 }

@@ -205,7 +205,68 @@ static int handle_msg(erlang_pid *pid) {
       }
     }
   } else if(strcmp(interpreter_atom, "call") == 0) {
-    // TODO
+    char *module = NULL;
+    char *function = NULL;
+    int function_arity = 0;
+    void **function_parameters;
+    if(arity == 5) {
+      ei_get_type(x_in->buff, &x_in->index, &type, &len);
+      if(ERL_BINARY_EXT == type) {
+        module = (char*)malloc(sizeof(char)*(len+1));
+        memset(module, 0, len + 1);
+        if(ei_decode_binary(x_in->buff, &x_in->index, module, NULL) < 0) {
+          error_msg(x_out, "invalid_parameter_1");
+          return 1;
+        } 
+      } else {
+        LANGERL_LOG("==> GO %d expected %d", type, ERL_BINARY_EXT);
+        error_msg(x_out, "invalid_parameter_2");
+        return 1;
+      }
+    } else if(arity != 4) {
+      error_msg(x_out, "wrong_parameters");
+      return 1;
+    }
+    ei_get_type(x_in->buff, &x_in->index, &type, &len);
+    if(ERL_BINARY_EXT == type) {
+      function = (char*)malloc(sizeof(char)*(len+1));
+      memset(function, 0, len + 1);
+      if(ei_decode_binary(x_in->buff, &x_in->index, function, NULL) < 0) {
+        error_msg(x_out, "invalid_parameter_3");
+        return 1;
+      } 
+    } else {
+      error_msg(x_out, "invalid_parameter_4");
+      return 1;
+    }
+    ei_get_type(x_in->buff, &x_in->index, &type, &function_arity);
+    if(ERL_LIST_EXT == type) {
+      LANGERL_LOG("====> call /%d", function_arity);
+      int i;
+      function_parameters = (void**)malloc(sizeof(void*)*function_arity);
+      for(i = 1; i <= function_arity; i++) { 
+        function_parameters[i] = to_interpreter(x_in);
+      }
+    } else if(ERL_NIL_EXT == type) {
+      function_arity = 0;
+      function_parameters = (void**)malloc(sizeof(void*)*0);
+    } else {
+      LANGERL_LOG("==> GO %d expected %d", type, ERL_LIST_EXT);
+      error_msg(x_out, "invalid_parameter_5");
+      return 1;
+    }
+    void *result = call_interpreter(module, function, function_arity, function_parameters);
+    x_out->index = 0;
+    ei_x_encode_version(x_out);
+    ei_x_encode_tuple_header(x_out, 2);
+    ei_x_encode_atom(x_out, "call");
+    ei_x_encode_tuple_header(x_out, 2);
+    ei_x_encode_atom(x_out, "ok");
+    to_erlang(x_out, result);
+
+    if(NULL != module) { free(module); }
+    free(function);
+    free(function_parameters);
   } else if(strcmp(interpreter_atom, "load") == 0) {
     if(arity != 3) {
       error_msg(x_out, "missing_parameter");

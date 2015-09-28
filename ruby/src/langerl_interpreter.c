@@ -17,13 +17,13 @@ int start_interpreter(void **interpreter) {
   ruby_init();
   ruby_init_loadpath();
 
-  rb_funcall(rb_mKernel, rb_intern("require"), 1, rb_str_new2(ROOT_RB));
-
-  ID sym_mymodule = rb_intern("Summer");
-  VALUE mymodule = rb_const_get(rb_cObject, sym_mymodule);
-  VALUE result = rb_funcall(mymodule, rb_intern("sum"), 1, INT2FIX(10));
-
-  LANGERL_LOG("Result = %d\n", NUM2INT(result));
+//  rb_funcall(rb_mKernel, rb_intern("require"), 1, rb_str_new2(ROOT_RB));
+//
+//  ID sym_mymodule = rb_intern("Summer");
+//  VALUE mymodule = rb_const_get(rb_cObject, sym_mymodule);
+//  VALUE result = rb_funcall(mymodule, rb_intern("sum"), 1, INT2FIX(10));
+//
+//  LANGERL_LOG("Result = %d\n", NUM2INT(result));
 
   return 1;
 }
@@ -49,10 +49,9 @@ int load_file_interpreter(char *file) {
       LANGERL_LOG("Load file %s: ERROR", file);
       return LOAD_ALREADY;
     }
-  } else {
-    LANGERL_LOG("Load file %s: MISSING", file);
-    return LOAD_MISSING_FILE;
   }
+  LANGERL_LOG("Load file %s: MISSING", file);
+  return LOAD_MISSING_FILE;
 }
 
 void * exec_interpreter(char *code, int *rcod) {
@@ -66,6 +65,63 @@ void * exec_interpreter(char *code, int *rcod) {
   return NULL;
 }
 
+void * call_interpreter(char *module, char *fun, int arity, void **params) {
+  VALUE val_module = NULL;
+  if(NULL != module) {
+    val_module = rb_const_get(rb_cObject, rb_intern(module));
+  }
+  return (void*)rb_funcall2(val_module, rb_intern(fun), arity, (VALUE*)params);
+}
+
+void * to_interpreter(ei_x_buff * x_buff) {
+	ei_term term;
+	if (ei_decode_ei_term(x_buff->buff, &x_buff->index, &term) < 0) {
+    return NULL;
+  }
+  switch (term.ei_type) {
+    case ERL_ATOM_EXT:
+    case ERL_SMALL_ATOM_EXT:
+    case ERL_ATOM_UTF8_EXT:
+    case ERL_SMALL_ATOM_UTF8_EXT:
+      // TODO
+      break;
+    case ERL_SMALL_INTEGER_EXT:
+    case ERL_INTEGER_EXT:
+      // TODO
+      break;
+    case ERL_FLOAT_EXT:
+    case NEW_FLOAT_EXT:
+      // TODO
+      break;
+    case ERL_STRING_EXT:
+    case ERL_BINARY_EXT:
+      // TODO
+      break;
+    case ERL_SMALL_TUPLE_EXT:
+    case ERL_LARGE_TUPLE_EXT:
+      // TODO
+      break;
+    case ERL_LIST_EXT:
+      // TODO
+      break;
+    case ERL_NIL_EXT:
+      // TODO
+      break;
+    case ERL_SMALL_TUPLE_EXT:
+    case ERL_LARGE_TUPLE_EXT:
+      // TODO
+      break;
+    case ERL_MAP_EXT:
+      // TODO
+      break;
+    default:
+      break;
+  }
+}
+
+ 
+
+
 void to_erlang(ei_x_buff *x_out, void *data) {
   char *str = NULL;
   VALUE rdata = (VALUE)data;
@@ -75,21 +131,6 @@ void to_erlang(ei_x_buff *x_out, void *data) {
       LANGERL_LOG("===> T_NIL");
       ei_x_encode_atom(x_out, "nil");
       break;
-    case T_OBJECT:
-      LANGERL_LOG("===> T_OBJECT");
-      // TODO
-      ei_x_encode_atom(x_out, "undefined_t_object");
-      break;
-    case T_CLASS:
-      LANGERL_LOG("===> T_CLASS");
-      // TODO
-      ei_x_encode_atom(x_out, "undefined_t_class");
-      break;
-    case T_MODULE:
-      LANGERL_LOG("===> T_MODULE");
-      // TODO
-      ei_x_encode_atom(x_out, "undefined_t_module");
-      break;
     case T_FLOAT:
       LANGERL_LOG("===> T_FLOAT");
       ei_x_encode_double(x_out, NUM2DBL(rdata));
@@ -98,11 +139,6 @@ void to_erlang(ei_x_buff *x_out, void *data) {
       LANGERL_LOG("===> T_STRING");
       str = StringValueCStr(rdata);
       ei_x_encode_binary(x_out, str, strlen(str));
-      break;
-    case T_REGEXP:
-      LANGERL_LOG("===> T_REGEXP");
-      // TODO
-      ei_x_encode_atom(x_out, "undefined_t_regexp");
       break;
     case T_ARRAY:
       LANGERL_LOG("===> T_ARRAY");
@@ -127,21 +163,6 @@ void to_erlang(ei_x_buff *x_out, void *data) {
       LANGERL_LOG("===> T_FIXNUM");
       ei_x_encode_long(x_out, NUM2LONG(rdata));
       break;
-    case T_COMPLEX:
-      LANGERL_LOG("===> T_COMPLEX");
-      // TODO
-      ei_x_encode_atom(x_out, "undefined_t_complex");
-      break;
-    case T_RATIONAL:
-      LANGERL_LOG("===> T_RATIONAL");
-      // TODO
-      ei_x_encode_atom(x_out, "undefined_t_rational");
-      break;
-    case T_FILE:
-      LANGERL_LOG("===> T_FILE");
-      // TODO
-      ei_x_encode_atom(x_out, "undefined_t_file");
-      break;
     case T_TRUE:
       LANGERL_LOG("===> T_TRUE");
       ei_x_encode_boolean(x_out, 1);
@@ -149,11 +170,6 @@ void to_erlang(ei_x_buff *x_out, void *data) {
     case T_FALSE:
       LANGERL_LOG("===> T_FALSE");
       ei_x_encode_boolean(x_out, 0);
-      break;
-    case T_DATA:
-      LANGERL_LOG("===> T_DATA");
-      // TODO
-      ei_x_encode_atom(x_out, "undefined_t_data");
       break;
     case T_SYMBOL :
       LANGERL_LOG("===> T_SYMBOL");
@@ -163,7 +179,7 @@ void to_erlang(ei_x_buff *x_out, void *data) {
       break;
     default:
       LANGERL_LOG("===> UNDEFINED: %d", TYPE(rdata));
-      ei_x_encode_atom(x_out, "undefined");
+      ei_x_encode_atom(x_out, "undefined_internal_data_type");
       break;
   }
   return;

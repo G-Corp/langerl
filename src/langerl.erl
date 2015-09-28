@@ -23,19 +23,19 @@ start_link(Node, Interpreter) ->
 stop(Node) ->
 	gen_server:call(Node, stop, infinity).
 
-call(Node, Module, Fun, Args) ->
+call(Node, Module, Fun, Args) when is_atom(Node), is_binary(Module), is_binary(Fun), is_list(Args) ->
 	gen_server:call(Node, {call, Module, Fun, Args}, infinity).
 
-call(Node, Fun, Args) ->
+call(Node, Fun, Args) when is_atom(Node), is_binary(Fun), is_list(Args) ->
 	gen_server:call(Node, {call, Fun, Args}, infinity).
 
-load(Node, File) ->
+load(Node, File) when is_atom(Node), is_binary(File) ->
 	gen_server:call(Node, {load, File}, infinity).
 
-execute(Node, Code) ->
+execute(Node, Code) when is_atom(Node), is_binary(Code) ->
 	gen_server:call(Node, {exec, Code}, infinity).
 
-test(Node, Value) ->
+test(Node, Value) when is_atom(Node) ->
   gen_server:call(Node, {test, Value}, infinity).
 
 init([Node, Interpreter]) ->
@@ -92,6 +92,9 @@ handle_info({load, Result}, #state{interpreter = Int, from = From} = State) when
 	gen_server:reply(From, {Int, {ok, Result}}),
 	{noreply, State#state{from=undefined}};
 handle_info({exec, Result}, #state{interpreter = Int, from = From} = State) when From =/= undefined ->
+	gen_server:reply(From, {Int, Result}),
+	{noreply, State#state{from=undefined}};
+handle_info({call, Result}, #state{interpreter = Int, from = From} = State) when From =/= undefined ->
 	gen_server:reply(From, {Int, Result}),
 	{noreply, State#state{from=undefined}};
 handle_info({error, _} = Result, #state{interpreter = Int, from = From} = State) when From =/= undefined ->

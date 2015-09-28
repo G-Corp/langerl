@@ -15,7 +15,9 @@ int stop_interpreter(void *);
 int test_interpreter(int);
 int load_file_interpreter(char *);
 void * exec_interpreter(char *, int *);
+void * call_interpreter(char *, char *, int, void **);
 
 void to_erlang(ei_x_buff *, void *);
+void * to_interpreter(ei_x_buff *);
 
 #endif
