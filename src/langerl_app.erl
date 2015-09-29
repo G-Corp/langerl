@@ -1,3 +1,4 @@
+% @hidden
 -module(langerl_app).
 
 -behaviour(application).

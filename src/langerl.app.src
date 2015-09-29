@@ -1,13 +1,13 @@
-{application, ${langerl_app_name},
+{application, langerl,
  [
   {description, ""},
-  {vsn, ${langerl_app_version}},
+  {vsn, "0.0.1"},
   {registered, []},
-  {modules, [${langerl_app_modules}]},
+  {modules, []},
   {applications, [
                   kernel
                   , stdlib
                  ]},
-  {mod, {${langerl_app_name}_app, []}},
+  {mod, {langerl_app, []}},
   {env, []}
  ]}.

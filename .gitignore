@@ -3,4 +3,7 @@ priv
 ebin
 erl_crash.dump
 log.txt
+.erlang.mk/
+deps/
+langerl.d
 
