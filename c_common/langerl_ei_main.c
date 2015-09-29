@@ -253,13 +253,17 @@ static int handle_msg(erlang_pid *pid) {
       goto TERMINATE_CALL;
     }
     void *result = call_interpreter(module, function, function_arity, function_parameters);
-    x_out->index = 0;
-    ei_x_encode_version(x_out);
-    ei_x_encode_tuple_header(x_out, 2);
-    ei_x_encode_atom(x_out, "call");
-    ei_x_encode_tuple_header(x_out, 2);
-    ei_x_encode_atom(x_out, "ok");
-    to_erlang(x_out, result);
+    if(NULL == result) {
+      error_msg(x_out, "undefined_function");
+    } else {
+      x_out->index = 0;
+      ei_x_encode_version(x_out);
+      ei_x_encode_tuple_header(x_out, 2);
+      ei_x_encode_atom(x_out, "call");
+      ei_x_encode_tuple_header(x_out, 2);
+      ei_x_encode_atom(x_out, "ok");
+      to_erlang(x_out, result);
+    }
 
 TERMINATE_CALL:
     if(NULL != module) { free(module); }
