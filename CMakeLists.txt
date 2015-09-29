@@ -25,6 +25,6 @@ if($ENV{DEBUG})
 endif($ENV{DEBUG}) 
 
 add_subdirectory(ruby)
-add_subdirectory(python)
+#add_subdirectory(python)
 add_subdirectory(complex)
 
