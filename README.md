@@ -13,24 +13,25 @@ __Authors:__ Gregoire Lejeune ([`gregoire.lejeune@gmail.com`](mailto:gregoire.le
 ### Build ###
 
 ```
-
 make
-
 ```
 
 or
 
 ```
-
 make DEBUG=1
-
 ```
 
 
 ### Dev ###
 
 ```
+make dev
+```
 
-make  dev
 
+### Tests ###
+
+```
+make xtests
 ```

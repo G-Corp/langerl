@@ -1,6 +1,6 @@
 require "rubygems"
 require "uuid"
-module MyUUID
+module LangerlRubyTest
   def self.generate()
     UUID.generate
   end

@@ -6,19 +6,17 @@
 @doc
 <h3>Build</h3>
 
-<pre>
-make
-</pre>
+<pre>make</pre>
 
 or
 
-<pre>
-make DEBUG=1
-</pre>
+<pre>make DEBUG=1</pre>
 
 <h3>Dev</h3>
 
-<pre>
-make  dev
-</pre>
+<pre>make dev</pre>
+
+<h3>Tests</h3>
+
+<pre>make xtests</pre>
 

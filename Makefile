@@ -1,13 +1,6 @@
 PROJECT = langerl
 
 DEPS = edown
-#dep_lager = git https://github.com/basho/lager.git master
-#dep_wok_message = git git@gitlab.scalezen.com:msaas/wok_message.git erlang-mk
-#dep_wok_message_handler = git git@gitlab.scalezen.com:msaas/wok_message_handler.git erlang-mk
-#dep_pipette = git git@gitlab.scalezen.com:msaas/pipette.git erlang-mk
-#dep_kafe = git https://github.com/homeswap/kafe.git erlang-mk
-#dep_cowboy = git https://github.com/ninenines/cowboy.git master
-#dep_eutils = git https://github.com/emedia-project/eutils.git master
 dep_edown = git https://github.com/homeswap/edown.git master
 
 CP = cp
@@ -26,16 +19,22 @@ EDOC_OPTS = {doclet, edown_doclet} \
 
 include erlang.mk
 
-app::
-	@mkdir -p build
-	cd build ; cmake .. ; make
+app:: compile-nodes
 
 clean::
 	@rm -rf priv
 	@rm -rf build
 
+compile-nodes:
+	@mkdir -p build
+	cd build ; cmake .. ; make
+
 dev: deps app
 	@erl -name test -pa ebin include deps/*/ebin deps/*/include -config config/langerl.config
+
+xtests: test-build app
+	$(gen_verbose) $(ERL) -name tests -pa $(TEST_DIR) $(DEPS_DIR)/*/ebin ebin \
+		-eval "$(subst $(newline),,$(subst ",\",$(call eunit.erl,$(EUNIT_MODS))))"
 
 # rel-dev: deps app
 # 	@${RM_RF} ../wok-dev
