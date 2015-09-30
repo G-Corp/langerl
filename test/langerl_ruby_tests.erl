@@ -26,7 +26,8 @@ t_test_erlang_module() ->
   ?assertMatch({ruby,{ok,false}}, langerl:call(x, <<"Erlang">>, <<"test">>, [false])),
   ?assertMatch({ruby,{ok,[1,2]}}, langerl:call(x, <<"Erlang">>, <<"test">>, [[1,2]])),
   ?assertMatch({ruby,{ok,[1,<<"deux">>,trois]}}, langerl:call(x, <<"Erlang">>, <<"test">>, [[1, <<"deux">>, trois]])),
-  ?assertMatch({ruby,{ok,{1,<<"deux">>,trois}}}, langerl:call(x, <<"Erlang">>, <<"test">>, [{1, <<"deux">>, trois}])).
+  ?assertMatch({ruby,{ok,{1,<<"deux">>,trois}}}, langerl:call(x, <<"Erlang">>, <<"test">>, [{1, <<"deux">>, trois}])),
+  ?assertMatch({ruby,{ok,#{one := un, 2 := 2, <<"three">> := <<"trois">>, "quatre" := "four"}}}, langerl:call(x, <<"Erlang">>, <<"test">>, [#{one => un, 2 => 2, <<"three">> => <<"trois">>, "quatre" => "four"}])).
 
 t_test_loaded_module() ->
    ?assertMatch({ruby,{ok,_}}, langerl:load(x, <<"./test/ruby/langerl_ruby_test.rb">>)),
@@ -41,6 +42,7 @@ t_test_loaded_module() ->
    ?assertMatch({ruby,{ok,false}}, langerl:call(x, <<"LangerlRubyTest">>, <<"re">>, [false])),
    ?assertMatch({ruby,{ok,[1,2]}}, langerl:call(x, <<"LangerlRubyTest">>, <<"re">>, [[1,2]])),
    ?assertMatch({ruby,{ok,[1,<<"deux">>,trois]}}, langerl:call(x, <<"LangerlRubyTest">>, <<"re">>, [[1, <<"deux">>, trois]])),
+   ?assertMatch({ruby,{ok,#{one := un, 2 := 2, <<"three">> := <<"trois">>, "quatre" := "four"}}}, langerl:call(x, <<"LangerlRubyTest">>, <<"re">>, [#{one => un, 2 => 2, <<"three">> => <<"trois">>, "quatre" => "four"}])),
  
    ?assertMatch({ruby,{ok,[un,2,<<"trois">>]}}, langerl:call(x, <<"LangerlRubyTest">>, <<"array">>, [])),
    ?assertMatch({ruby,{ok,{un,2,<<"trois">>}}}, langerl:call(x, <<"LangerlRubyTest">>, <<"tuple">>, [])).

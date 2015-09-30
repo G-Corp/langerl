@@ -6,6 +6,7 @@
 #include "langerl_ruby_class.h"
 
 void ruby_to_erlang_tuple(ei_x_buff *, VALUE);
+int get_ruby_hash_key(VALUE, VALUE, VALUE);
 
 int start_interpreter(void **interpreter) {
   *interpreter = NULL;
@@ -148,8 +149,14 @@ void * to_interpreter(ei_x_buff * x_buff) {
         result = rb_ary_new();
         break;
       case ERL_MAP_EXT:
-        LANGERL_LOG("===> ERL_*_MAP_*");
-        // TODO
+        LANGERL_LOG("===> ERL_*_MAP_* : %d", term.arity);
+        result = rb_hash_new();
+        for(i = 0; i < term.arity; i++) {
+          LANGERL_LOG("  => #%d", i);
+          VALUE key = (VALUE)to_interpreter(x_buff);
+          VALUE val = (VALUE)to_interpreter(x_buff);
+          rb_hash_aset(result, key, val);
+        }
         break;
       default:
         LANGERL_LOG("===> ERL_*_???_*");
@@ -198,6 +205,7 @@ void ** to_interpreter_array(ei_x_buff *x_buff) {
 }
 
 void to_erlang(ei_x_buff *x_out, void *data) {
+  VALUE tmp;
   long i, j;
   char *str = NULL;
 
@@ -226,9 +234,16 @@ void to_erlang(ei_x_buff *x_out, void *data) {
       ei_x_encode_empty_list(x_out);
       break;
     case T_HASH:
-      LANGERL_LOG("===> T_HASH");
-      // TODO
-      ei_x_encode_atom(x_out, "undefined_t_hash");
+      i = RHASH_SIZE(rdata);
+      LANGERL_LOG("===> T_HASH : %d", i);
+      tmp = rb_ary_new2(i);
+      rb_hash_foreach(rdata, get_ruby_hash_key, tmp);
+      ei_x_encode_map_header(x_out, (int)i);
+      for(j = 0; j < i; j++) {
+        VALUE key = rb_ary_entry(tmp, j);
+        to_erlang(x_out, (void *)key);
+        to_erlang(x_out, (void *)rb_hash_aref(rdata, key));
+      }
       break;
     case T_OBJECT:
     case T_DATA:
@@ -282,3 +297,9 @@ void ruby_to_erlang_tuple(ei_x_buff *x_out, VALUE self) {
     to_erlang(x_out, (void *)rb_ary_entry(tuple->data, i));
   }
 }
+
+int get_ruby_hash_key(VALUE key, VALUE val, VALUE in) {
+  rb_ary_push(in, key);
+  return ST_CONTINUE;
+}
+
