@@ -35,9 +35,19 @@ int test_interpreter(int value) {
   return value + value;
 }
 
+VALUE require(VALUE file) {
+  return rb_funcall(rb_mKernel, rb_intern("require"), 1, file);
+}
+
 int load_file_interpreter(char *file) {
+  int exception;
   if(access(file, F_OK) == 0) {
-    VALUE result = rb_funcall(rb_mKernel, rb_intern("require"), 1, rb_str_new2(file));
+    // VALUE result = rb_funcall(rb_mKernel, rb_intern("require"), 1, rb_str_new2(file));
+    VALUE result = rb_protect(require, rb_str_new2(file), &exception);
+    if(exception) {
+      LANGERL_LOG("Load file %s: Exception", file);
+      return LOAD_EXCEPTION;
+    }
     if(result == Qtrue) {
       LANGERL_LOG("Load file %s: OK", file);
       return LOAD_OK;

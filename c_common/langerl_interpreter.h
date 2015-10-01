@@ -7,6 +7,7 @@
 #define LOAD_ERROR 2
 #define LOAD_ALREADY 3
 #define LOAD_MISSING_FILE 4
+#define LOAD_EXCEPTION 5
 #define EXEC_OK 1
 #define EXEC_ERROR 2
 

@@ -292,7 +292,10 @@ TERMINATE_CALL:
               error_msg(x_out, "alreary_loaded");
               break;
             case LOAD_MISSING_FILE:
-              error_msg(x_out, "missing_file");
+              error_msg(x_out, "file_not_found");
+              break;
+            case LOAD_EXCEPTION:
+              error_msg(x_out, "file_exception");
               break;
             case LOAD_ERROR:
             default:

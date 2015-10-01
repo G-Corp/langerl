@@ -10,6 +10,7 @@ langerl_ruby_test_() ->
       ?_test(t_test_erlang_module())
       , ?_test(t_test_loaded_module())
       , ?_test(t_test_undef())
+      , ?_test(t_load_file())
    ]}.
 
 setup() ->
@@ -50,4 +51,9 @@ t_test_loaded_module() ->
 t_test_undef() ->
    ?assertMatch({ruby,{error,undefined_function}}, langerl:call(x, <<"UndefinedModule">>, <<"this_function_does_not_exist">>, [])),
    ?assertMatch({ruby,{error,undefined_function}}, langerl:call(x, <<"LangerlRubyTest">>, <<"this_function_does_not_exist">>, [])).
+
+t_load_file() ->
+  ?assertMatch({ruby,{error,alreary_loaded}}, langerl:load(x, <<"./test/ruby/langerl_ruby_test.rb">>)),
+  ?assertMatch({ruby,{error,file_not_found}}, langerl:load(x, <<"this/file/does/not/exist.rb">>)),
+  ?assertMatch({ruby,{error,file_exception}}, langerl:load(x, <<"./test/ruby/langerl_ruby_error.rb">>)).
 
