@@ -25,7 +25,7 @@ int start_interpreter(void **interpreter) {
 }
 
 int stop_interpreter(void *interpreter) {
-  LANGERL_LOG("stop interpreter for ruby! %s", interpreter);
+  LANGERL_LOG("stop interpreter for ruby!");
   ruby_cleanup(0);
   return 1;
 }
