@@ -15,7 +15,7 @@ EDOC_OPTS = {doclet, edown_doclet} \
 						, {stylesheet, ""} \
 						, {image, ""} \
 						, {edown_target, gitlab} \
-						, {top_level_readme, {"./README.md", "https://gitlab.scalezen.com/msaas/langerl"}} 
+						, {top_level_readme, {"./README.md", "https://gitlab.botsunit.com/msaas/langerl"}} 
 
 include erlang.mk
 
@@ -36,13 +36,12 @@ xtests: test-build app
 	$(gen_verbose) $(ERL) -name tests -pa $(TEST_DIR) $(DEPS_DIR)/*/ebin ebin \
 		-eval "$(subst $(newline),,$(subst ",\",$(call eunit.erl,$(EUNIT_MODS))))"
 
-# rel-dev: deps app
-# 	@${RM_RF} ../wok-dev
-# 	git clone git@github.com:scalezen-developer/wok.git ../wok-dev
-# 	@${CP} rebar.release.config ../wok-dev/rebar.config
-# 	@${CP_R} ebin ../wok-dev
-# 	@${CP_R} config ../wok-dev
-# 	@${CP_R} include ../wok-dev
-# 	cd ../wok-dev; git add . 
-# 	cd ../wok-dev; git commit -m "Update ${DATE}"
+rel-dev: deps app
+	@${RM_RF} ../langerl-dev
+	git clone git@github.com:botsunit/langerl.git ../langerl-dev
+	@${CP_R} ebin ../langerl-dev
+	@${CP_R} config ../langerl-dev
+	@${CP_R} include ../langerl-dev
+	cd ../langerl-dev; git add . 
+	cd ../langerl-dev; git commit -m "Update ${DATE}"
 
